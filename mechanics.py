@@ -25,7 +25,10 @@ class Mechanics:
         self.handle_glass(player)
 
         if self.handle_lava(player):
-            return "dead" 
+            return "dead"
+        
+        if player.pos == self.level.goal:
+            return "goal"
 
         # glass use prev_pos
         if prev_pos is not None:

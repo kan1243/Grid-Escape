@@ -562,7 +562,7 @@ while True:
             reset()
             continue
     
-        if player.pos == level.goal:
+        if result == "goal":
             record_win(current_level, current_variant, player_name, start_time)
             result_message = f"YOU WIN! (Level {current_level+1})"
             game_state = RESULT
