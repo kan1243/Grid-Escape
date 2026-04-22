@@ -25,7 +25,7 @@ class Mechanics:
         self.handle_glass(player)
 
         if self.handle_lava(player):
-            return "dead"
+            return "dead" 
 
         # glass use prev_pos
         if prev_pos is not None:
@@ -47,6 +47,7 @@ class Mechanics:
     def handle_ice(self, player):
         if player.pos in self.level.ice:
             next_pos = player.next_pos()
+            
             if not self.level.is_blocked(next_pos):
                 player.pos = next_pos
 

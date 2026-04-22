@@ -8,6 +8,8 @@ from mechanics import Mechanics
 from config import DIR
 from button import Button
 import random
+from stats import save_stat
+from stat_screen import get_summary, draw_stat_screen, get_win_rate
 
 # ===== GAME STATE =====
 MENU = "menu"
@@ -90,6 +92,8 @@ clock = pygame.time.Clock()
 btn_play = Button((0, 0, 200, 60), "PLAY")
 btn_stat = Button((0, 0, 200, 60), "STAT")
 btn_quit = Button((0, 0, 200, 60), "QUIT")
+btn_prev = Button((0,0,60,60), "<")
+btn_next = Button((0,0,60,60), ">")
 
 # ===== LEVEL BUTTONS =====
 level_buttons = []
@@ -113,7 +117,14 @@ ROWS = 0
 COLS = 0
 
 start_time = 0
-
+steps = 0
+death_count = 0
+attempt = 1
+first_pass_dict = {}
+scroll_y = 0
+y = 200
+page = 0
+ROWS_PER_PAGE = 8
 
 # ===== LOAD LEVEL =====
 def load_current_level():
@@ -133,6 +144,11 @@ def load_current_level():
 
 # ===== RESET =====
 def reset():
+    global steps, death_count
+
+    steps = 0
+    death_count = 0
+
     player.reset()
     level.reset_state()
 
@@ -317,24 +333,6 @@ def draw_select():
         b.rect.topleft = (x, y)
         b.draw(screen, font_small)
 
-# ===== DRAW STAT =====
-def draw_stat():
-    screen.fill((20, 20, 20))
-
-    center_x = screen.get_width() // 2
-
-    title = font_big.render("Statistics", True, (255,255,255))
-    title_rect = title.get_rect(center=(center_x, 120))
-    screen.blit(title, title_rect)
-
-    text = font_small.render("Coming Soon...", True, (200,200,200))
-    text_rect = text.get_rect(center=(center_x, 220))
-    screen.blit(text, text_rect)
-
-    hint = font_small.render("Press ESC to go back", True, (150,150,150))
-    hint_rect = hint.get_rect(center=(center_x, 350))
-    screen.blit(hint, hint_rect)
-
 # ===== DRAW NAME INPUT =====
 def draw_name_input():
     screen.fill((20, 20, 20))
@@ -411,6 +409,89 @@ def handle_name_input(event):
                 if event.unicode.isalnum():
                     player_name += event.unicode
 
+# ===== HANDLE DEATH COUNT =====
+def handle_death():
+    global death_count
+
+    death_count += 1
+    player.reset()
+
+# ===== HANDLE STEP COUNT =====
+def handle_step():
+    global steps
+    steps += 1    
+
+# ===== HANDLE WIN RECORD =====
+def record_win(current_level, current_variant, player_name, start_time):
+    global attempt, first_pass_dict
+
+    key = (current_level, current_variant)
+
+    first_pass = key not in first_pass_dict
+
+    time_used = (pygame.time.get_ticks() - start_time) / 1000
+
+    save_stat({
+        "player_name": player_name,
+        "level": current_level + 1,
+        "variant": current_variant + 1,
+        "attempt": attempt,
+        "steps": steps,
+        "time_used": round(time_used, 2),
+        "deaths": death_count,
+        "result": "win",
+        "first_pass": first_pass
+    })
+
+    first_pass_dict[key] = True
+    attempt += 1
+
+# ===== SHOW WIN RATE =====
+def draw_winrate_chart(screen, font_small):
+    win_rates = get_win_rate()
+
+    start_x = 150
+    base_y = 500
+    bar_width = 40
+    gap = 30
+
+    for i, level in enumerate(sorted(win_rates)):
+        rate = win_rates[level]
+
+        height = int(rate * 300)  # scale
+
+        x = start_x + i * (bar_width + gap)
+        y = base_y - height
+
+        pygame.draw.rect(screen, (100,200,255), (x, y, bar_width, height))
+
+        # label
+        text = font_small.render(str(level), True, (255,255,255))
+        screen.blit(text, (x, base_y + 10))
+
+        percent = font_small.render(f"{int(rate*100)}%", True, (255,255,255))
+        screen.blit(percent, (x, y - 30))    
+
+# ===== HANDLE WIN RECORD =====
+def record_lose(current_level, current_variant, player_name, start_time):
+    global attempt
+
+    time_used = (pygame.time.get_ticks() - start_time) / 1000
+
+    save_stat({
+        "player_name": player_name,
+        "level": current_level + 1,
+        "variant": current_variant + 1,
+        "attempt": attempt,
+        "steps": steps,
+        "time_used": round(time_used, 2),
+        "deaths": death_count,
+        "result": "lose",
+        "first_pass": False
+    })
+
+    attempt += 1
+
 # ===== MAIN LOOP =====
 while True:
     dt = clock.tick(60)
@@ -423,13 +504,24 @@ while True:
         if game_state == MENU:
             handle_menu(event)
 
+        elif game_state == SELECT:
+            handle_select(event)    
+
         elif game_state == STAT:
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    game_state = MENU    
+                    game_state = MENU
 
-        elif game_state == SELECT:
-            handle_select(event)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if btn_next.is_clicked(event.pos):
+                    page += 1
+                    print("NEXT", page)   # debug
+                elif btn_prev.is_clicked(event.pos):
+                    page -= 1
+                    print("PREV", page)
+
+            page = max(0, page)
 
         elif game_state == NAME_INPUT:
             handle_name_input(event)
@@ -443,12 +535,16 @@ while True:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     player.move(DIR["UP"], level)
+                    handle_step()
                 elif event.key == pygame.K_DOWN:
                     player.move(DIR["DOWN"], level)
+                    handle_step()
                 elif event.key == pygame.K_LEFT:
                     player.move(DIR["LEFT"], level)
+                    handle_step()
                 elif event.key == pygame.K_RIGHT:
                     player.move(DIR["RIGHT"], level)
+                    handle_step()
                 elif event.key == pygame.K_r:
                     reset()
                 elif event.key == pygame.K_n:   # N = next (ผ่านด่าน)
@@ -462,15 +558,18 @@ while True:
         result = mech.apply_all(player)  
 
         if result == "dead":
+            handle_death()
             reset()
-            continue 
+            continue
     
         if player.pos == level.goal:
+            record_win(current_level, current_variant, player_name, start_time)
             result_message = f"YOU WIN! (Level {current_level+1})"
             game_state = RESULT
     
         elapsed = (pygame.time.get_ticks() - start_time) / 1000
         if elapsed > time_limit:
+            record_lose(current_level, current_variant, player_name, start_time)
             result_message = "TIME UP!"
             game_state = RESULT
 
@@ -482,7 +581,17 @@ while True:
     elif game_state == PLAYING:
         draw()
     elif game_state == STAT:
-        draw_stat()
+        summary = get_summary()
+        total_pages = max(0, (len(summary) - 1)//8)
+        page = max(0, min(page, total_pages))
+
+        draw_stat_screen(screen, font_big, font_small, page)
+
+        btn_prev.rect.center = (screen.get_width()//2 - 80, screen.get_height() - 80)
+        btn_next.rect.center = (screen.get_width()//2 + 80, screen.get_height() - 80)
+
+        btn_prev.draw(screen, font_small)
+        btn_next.draw(screen, font_small)
     elif game_state == NAME_INPUT:
         draw_name_input()
     elif game_state == RESULT:

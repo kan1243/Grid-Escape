@@ -1,0 +1,3 @@
+player_name,level,variant,attempt,steps,time_used,deaths,result,first_pass
+bird,9,4,1,0,20.02,0,lose,False
+bird,9,2,2,20,11.48,0,win,True
