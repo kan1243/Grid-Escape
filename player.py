@@ -15,7 +15,12 @@ class Player:
 
     def reset(self):
         self.pos = self.start_pos
-        self.last_dir = (0, 0)
+
+        self.pixel_x = self.pos[1] * 60
+        self.pixel_y = self.pos[0] * 60
+
+        self.target_x = self.pixel_x
+        self.target_y = self.pixel_y
 
     def move(self, direction, level):
         dr, dc = direction

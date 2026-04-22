@@ -69,8 +69,17 @@ void_img = pygame.transform.scale(void_img, (TILE_SIZE, TILE_SIZE))
 goal_img = pygame.image.load("picture/goal.png")
 goal_img = pygame.transform.scale(goal_img, (TILE_SIZE, TILE_SIZE))
 
+lava_on_img = pygame.image.load("picture/lava_on.png")
+lava_on_img = pygame.transform.scale(lava_on_img, (TILE_SIZE, TILE_SIZE))
+
+lava_off_img = pygame.image.load("picture/lava_off.png")
+lava_off_img = pygame.transform.scale(lava_off_img, (TILE_SIZE, TILE_SIZE))
+
+ice_img = pygame.image.load("picture/ice.png")
+ice_img = pygame.transform.scale(ice_img, (TILE_SIZE, TILE_SIZE))
+
 font_big = pygame.font.SysFont(None, 60)
-font_small = pygame.font.SysFont(None, 40)
+font_small = pygame.font.Font("C:/Windows/Fonts/arial.ttf", 40)
 
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption("Grid Escape: A Time-Constrained Puzzle Game")
@@ -157,8 +166,16 @@ def draw():
             elif (r, c) in level.broken_glass:
                 screen.blit(void_img, (x, y))    
 
+            # ===== LAVA =====
+            elif (r, c) in level.lava:
+                if mech.laser_on:
+                    screen.blit(lava_on_img, (x, y))
+                else:
+                    screen.blit(lava_off_img, (x, y))
+
+            # ===== ICE =====
             elif (r, c) in level.ice:
-                pygame.draw.rect(screen, (150, 220, 255), (x, y, TILE_SIZE, TILE_SIZE))
+                screen.blit(ice_img, (x, y))        
 
             else:
                 pygame.draw.rect(screen, WHITE, (x, y, TILE_SIZE, TILE_SIZE))
@@ -332,9 +349,6 @@ def draw_name_input():
     box_rect = pygame.Rect(0, 0, 400, 60)
     box_rect.center = (center_x, 250)
 
-    # clear background box 
-    pygame.draw.rect(screen, (20, 20, 20), box_rect)
-
     # border
     pygame.draw.rect(screen, (255,255,255), box_rect, 2)
 
@@ -362,7 +376,7 @@ def handle_menu(event):
 
     if event.type == pygame.MOUSEBUTTONDOWN:
         if btn_play.is_clicked(event.pos):
-            game_state = NAME_INPUT   # ✔ ไปกรอกชื่อก่อน
+            game_state = NAME_INPUT
 
         elif btn_stat.is_clicked(event.pos):
             game_state = STAT
@@ -393,8 +407,9 @@ def handle_name_input(event):
             player_name = player_name[:-1]
 
         else:
-            if len(player_name) < 12:  # limit name lenght
-                player_name += event.unicode
+            if len(player_name) < 12:
+                if event.unicode.isalnum():
+                    player_name += event.unicode
 
 # ===== MAIN LOOP =====
 while True:
@@ -447,7 +462,8 @@ while True:
         result = mech.apply_all(player)  
 
         if result == "dead":
-            reset()  
+            reset()
+            continue 
     
         if player.pos == level.goal:
             result_message = f"YOU WIN! (Level {current_level+1})"

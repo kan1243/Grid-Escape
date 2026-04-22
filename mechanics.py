@@ -24,6 +24,9 @@ class Mechanics:
         self.handle_switch(player)
         self.handle_glass(player)
 
+        if self.handle_lava(player):
+            return "dead"
+
         # glass use prev_pos
         if prev_pos is not None:
             if prev_pos in self.level.glass and prev_pos != player.pos:
@@ -32,9 +35,6 @@ class Mechanics:
 
         # use last pos
         self.last_player_pos = player.pos
-
-        if self.handle_laser(player):
-            return "dead"
 
         if player.pos in self.level.broken_glass:
             return "dead"
@@ -104,30 +104,7 @@ class Mechanics:
             return True
         return False
 
-    def handle_laser(self, player):
+    def handle_lava(self, player):
         if not self.laser_on:
             return False
-        return player.pos in self.get_laser_tiles()
-
-    def get_laser_tiles(self):
-        tiles = set()
-
-        for laser in self.level.lasers:
-            r, c = laser["pos"]
-            dr, dc = {
-                "up": (-1, 0),
-                "down": (1, 0),
-                "left": (0, -1),
-                "right": (0, 1)
-            }[laser["dir"]]
-
-            nr, nc = r + dr, c + dc
-
-            while 0 <= nr < self.level.grid_size[0] and 0 <= nc < self.level.grid_size[1]:
-                if (nr, nc) in self.level.walls:
-                    break
-                tiles.add((nr, nc))
-                nr += dr
-                nc += dc
-
-        return tiles
+        return player.pos in self.level.lava

@@ -10,6 +10,7 @@ class Level:
         self.ice = set(map(tuple, data.get("ice", [])))
         self.traps = set(map(tuple, data.get("traps", [])))
         self.spikes = set(map(tuple, data.get("spikes", [])))
+        self.lava = set(map(tuple, data.get("lava", [])))
 
         self.teleporters = {
             k: [tuple(v[0]), tuple(v[1])]
@@ -25,9 +26,6 @@ class Level:
             k: set(map(tuple, v))
             for k, v in data.get("switches", {}).items()
         }
-
-        self.lasers = data.get("lasers", [])
-
         self.reset_state()
 
     def reset_state(self):
