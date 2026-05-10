@@ -2,29 +2,42 @@
 
 ## 1. Project Overview
 
-- **Project Name:** Grid Escape: A Time-Constrained Puzzle Game
+* **Project Name:** Grid Escape: A Time-Constrained Puzzle Game
+* **Developer:** Kantanut Utamapongchai
+* **Programming Language:** Python
+* **Libraries Used:** Pygame, CSV, JSON, Collections
 
-- **Brief Description:**  
-Grid Escape is a grid-based puzzle game developed using Python and Pygame.  
-Players must navigate through different levels while avoiding traps, managing time constraints, and interacting with various mechanics such as ice tiles, teleporters, and barriers.
+### Brief Description
 
-The game also includes a statistical system that records player performance, including time usage, number of deaths, and attempts. These statistics are visualized through tables and charts to provide insights into player behavior and difficulty of each level.
+Grid Escape is a grid-based puzzle game developed using Python and Pygame. Players must navigate through puzzle levels and reach the goal before the time limit expires.
 
-- **Problem Statement:**  
-Many puzzle games lack meaningful data tracking and analysis. This project aims to combine gameplay with statistical analysis to better understand player performance and level difficulty.
+Each level contains various mechanics such as ice tiles, spikes, lava, teleporters, breakable glass, barriers, and switches. These mechanics require players to think strategically and plan their movement carefully.
 
-- **Target Users:**  
-- Students learning programming and game development  
-- Casual players who enjoy puzzle games  
-- Developers interested in combining games with data analysis  
+The project also includes a statistical system that records gameplay data, including completion time, number of steps, deaths, and attempts. These data are visualized in a statistics screen using summary tables and win-rate graphs.
 
-- **Key Features:**  
-- Multiple levels with randomized variants  
-- Grid-based movement system  
-- Special mechanics (ice, spikes, teleporters, barriers)  
-- Time-limited gameplay  
-- Player performance tracking  
-- Statistical table and win-rate visualization  
+### Problem Statement
+
+Many puzzle games focus only on gameplay and do not provide meaningful data analysis. This project combines puzzle game mechanics with statistical analysis to better understand player performance and evaluate level difficulty.
+
+### Target Users
+
+* Students learning Python and object-oriented programming
+* Casual players who enjoy puzzle and strategy games
+* Developers interested in combining games with data analysis
+
+### Key Features
+
+* 10 puzzle levels with randomized variants
+* Grid-based movement system
+* Ice tiles with sliding mechanics
+* Spike traps and lava hazards
+* Teleporters
+* Breakable glass tiles
+* Barriers and switches
+* Time-limited gameplay
+* Player performance tracking
+* Statistical summary table
+* Win-rate visualization graph
 
 ---
 
@@ -32,76 +45,148 @@ Many puzzle games lack meaningful data tracking and analysis. This project aims 
 
 ### 2.1 Background
 
-This project was inspired by classic puzzle games that require logical thinking and movement planning.  
-The addition of time constraints and mechanics like ice tiles increases the challenge and complexity.
+This project was inspired by classic puzzle games that require logical thinking and movement planning. By introducing time constraints and special mechanics such as ice tiles and teleporters, the game becomes more challenging and engaging.
 
-The project also highlights the importance of collecting gameplay data to analyze player performance and improve game design.
+The project also emphasizes the importance of collecting gameplay data to analyze player performance and improve level design.
 
 ### 2.2 Objectives
 
-- Develop a fully functional puzzle game using Python and Pygame  
-- Apply object-oriented programming principles  
-- Collect and analyze gameplay data  
-- Visualize player performance using tables and charts  
-- Design levels with increasing difficulty  
+* Develop a fully functional puzzle game using Python and Pygame.
+* Apply object-oriented programming principles.
+* Design levels with increasing difficulty.
+* Record and analyze player performance.
+* Visualize gameplay data using tables and charts.
 
 ---
 
 ## 3. UML Class Diagram
 
-The UML Class Diagram illustrates the structure of the system, including:
-- Game control logic  
-- Player behavior  
-- Level data  
-- Mechanics processing  
+The UML Class Diagram illustrates the relationships between all major components of the project, including:
 
-📎 (Attach UML diagram PDF here in your repository)
+* Main game controller (`game.py`)
+* Level loading system
+* Player and level classes
+* Gameplay mechanics
+* Save and statistics systems
+* UI components
+
+The UML class diagram is included in the repository as:
+
+[UML_Class_Diagram.pdf](UML_Class_Diagram.pdf)
 
 ---
 
 ## 4. Object-Oriented Programming Implementation
 
-- **Game (main loop)**: Controls game states, input handling, and rendering  
-- **Player**: Manages movement, position, and animation  
-- **Level**: Stores grid layout, obstacles, and interactive elements  
-- **Mechanics**: Handles interactions such as ice, teleporters, traps, and lava  
-- **Button**: UI component for menus and navigation  
-- **Stat Screen**: Displays statistical data and visualization  
+The project is organized using object-oriented programming principles. Each class is responsible for a specific part of the system.
+
+### Core Classes
+
+* **LevelManager**: Loads level JSON files and randomly selects unused variants.
+* **Level**: Stores map layout, collision data, and all interactive objects.
+* **Player**: Manages movement, animation, and player state.
+* **Mechanics**: Processes interactions such as ice, teleporters, traps, and goal detection.
+
+### Data Management Classes
+
+* **SaveData**: Records gameplay results to `stats.csv` and calculates attempt numbers and first-pass success.
+* **StatScreen**: Loads and visualizes statistical data.
+
+### UI Classes
+
+* **Button**: Reusable button component for menus.
+
+### Main Module
+
+* **game.py**: Controls game states, event handling, rendering, and overall program flow.
 
 ---
 
 ## 5. Statistical Data
 
 ### 5.1 Data Recording Method
-Player data is stored in a CSV file (`stats.csv`) including:
-- Player name  
-- Level and variant  
-- Time used  
-- Number of steps  
-- Death count  
-- Result (win/lose)  
-- First-pass success  
 
-### 5.2 Data Features
-- Average time per level  
-- Minimum and maximum completion time  
-- Average number of deaths  
-- Win rate per level  
+Player data is stored in a CSV file named `stats.csv`. Each record contains:
+
+* Player name
+* Level number
+* Variant number
+* Attempt number
+* Number of steps
+* Time used
+* Death count
+* Result (`win` or `lose`)
+* First-pass success (`True` or `False`)
+
+### 5.2 Statistical Features
+
+The statistics system calculates and displays:
+
+* Average completion time per level variant
+* Minimum and maximum completion time
+* Average number of deaths
+* Total wins and losses
+* First-pass win rate for each level
+
+### 5.3 Data Visualization
+
+The game includes a statistics screen with two pages:
+
+1. **Summary Table** – Displays aggregated metrics for each level variant.
+2. **Win Rate Graph** – Shows first-pass success percentages for each level.
+
+These visualizations help analyze level difficulty and player performance.
 
 ---
 
 ## 6. Changed Proposed Features (Optional)
 
-Some mechanics and UI features were adjusted during development:
-- change laser to lava 
-- Improved stat visualization layout  
-- Adjusted level design for better playability
-- changed the amount level to 10 level
+Several features were adjusted during development:
+
+* Laser traps were replaced with lava tiles.
+* The number of levels was reduced from 20 to 10.
+* The statistical visualization layout was improved.
+* Several level designs were adjusted for better playability.
 
 ---
 
 ## 7. External Sources
 
-- Pygame library (game development framework)  
-- Icons and In game picture (Chat GPT-generated or self created)  
-- Python standard libraries (csv, collections)
+* Pygame library ([https://www.pygame.org/](https://www.pygame.org/))
+* Python Standard Library (`csv`, `json`, `random`, `collections`, `os`)
+* Some game assets and icons were created by the author or generated using ChatGPT.
+
+---
+
+## 8. Project Files
+
+### Source Code
+
+* `game.py`
+* `loader.py`
+* `level.py`
+* `player.py`
+* `mechanics.py`
+* `button.py`
+* `save_data.py`
+* `stat_screen.py`
+
+### Data Files
+
+* `stats.csv`
+* `levels/level1.json` to `levels/level10.json`
+
+### Documentation
+
+* `README.md`
+* `DESCRIPTION.md`
+* `UML_Class_Diagram.pdf`
+* `Proposal.pdf`
+
+---
+
+## 9. Demonstration Video
+
+The presentation video is available at:
+
+**YouTube Link:** *[(https://youtu.be/VxZlVI1gA40?si=CnckbmI3Zf8yyxS5)]*

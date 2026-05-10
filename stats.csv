@@ -63,3 +63,5 @@ jerry,8,1,1,153,18.13,0,win,True
 jerry,3,1,1,17,6.18,4,win,True
 jerry,3,3,1,52,10.01,7,lose,False
 ant,3,5,1,14,5.76,0,win,True
+pooh,8,2,1,49,26.07,0,win,True
+pooh,7,2,1,52,25.01,0,lose,False
