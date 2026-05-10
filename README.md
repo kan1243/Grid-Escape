@@ -23,13 +23,12 @@ python <your-file>.py
 
 Mac:
 ```sh
-python3 <your-file>.py
+python <your-file>.py
 ```
 
 
 ## Running Guide
 After activate Python Environment of this project, you can process to run the game by:
-
 
 ## Tutorial / Usage
 - Enter your name at the start
@@ -51,9 +50,11 @@ After activate Python Environment of this project, you can process to run the ga
 - Time-limited gameplay
 - Statistics tracking system
 - Data visualization (table + win rate chart)
+
 ## Known Bugs
 - Some level variants may have unreachable goals due to mechanics interaction
 - Ice movement may cause unexpected behavior in edge cases
+
 ## Unfinished Works
 - Advanced UI improvements
 - More detailed data visualization

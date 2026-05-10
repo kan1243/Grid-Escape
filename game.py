@@ -1,15 +1,10 @@
 import pygame
 import sys
 
-from loader import load_level
-from level import Level
-from player import Player
-from mechanics import Mechanics
-from config import DIR
+from loader import LevelManager
 from button import Button
-import random
-from stats import save_stat
-from stat_screen import get_summary, draw_stat_screen, get_win_rate
+from save_data import SaveData
+from stat_screen import StatScreen
 
 # ===== GAME STATE =====
 MENU = "menu"
@@ -27,6 +22,14 @@ player_name = ""
 result_message = ""
 
 # ===== CONFIG =====
+
+DIR = {
+    "UP": (-1, 0),
+    "DOWN": (1, 0),
+    "LEFT": (0, -1),
+    "RIGHT": (0, 1)
+}
+
 COLOR_POOL = [
     (255,100,100),
     (100,255,100),
@@ -45,7 +48,6 @@ time_limit = 15
 
 WHITE = (240, 240, 240)
 BLACK = (30, 30, 30)
-GREEN = (0, 200, 0)
 RED = (200, 0, 0)
 GRAY = (100, 100, 100)
 
@@ -88,12 +90,15 @@ pygame.display.set_caption("Grid Escape: A Time-Constrained Puzzle Game")
 
 clock = pygame.time.Clock()
 
+stat_screen = StatScreen(screen, font_big, font_small) # Create stat screen obj.
+save_data = SaveData() #create save data obj.
+level_manager = LevelManager() #create load level obj.
+
 # ===== MENU BUTTONS =====
 btn_play = Button((0, 0, 200, 60), "PLAY")
 btn_stat = Button((0, 0, 200, 60), "STAT")
 btn_quit = Button((0, 0, 200, 60), "QUIT")
-btn_prev = Button((0,0,60,60), "<")
-btn_next = Button((0,0,60,60), ">")
+
 
 # ===== LEVEL BUTTONS =====
 level_buttons = []
@@ -101,7 +106,7 @@ start_x = 100
 start_y = 150
 gap = 100
 
-for i in range(15):
+for i in range(10):
     row = i // 5
     col = i % 5
     x = start_x + col * gap
@@ -119,28 +124,31 @@ COLS = 0
 start_time = 0
 steps = 0
 death_count = 0
-attempt = 1
-first_pass_dict = {}
-scroll_y = 0
-y = 200
-page = 0
-ROWS_PER_PAGE = 8
 
 # ===== LOAD LEVEL =====
 def load_current_level():
-    global level, player, player_name, mech, ROWS, COLS, start_time, current_variant, time_limit
+    global level, player, mech
+    global ROWS, COLS
+    global start_time
+    global current_variant
+    global time_limit
+    global steps, death_count
 
-    level_data, current_variant, time_limit = load_level(f"level{current_level + 1}")
-    level = Level(level_data)
-    player = Player(level.start)
-    mech = Mechanics(level)
+    data = level_manager.load_current_level(current_level)
 
-    ROWS, COLS = level.grid_size
+    level = data["level"]
+    player = data["player"]
+    mech = data["mechanics"]
 
-    start_time = pygame.time.get_ticks()
+    ROWS = data["rows"]
+    COLS = data["cols"]
 
-    print("LEVEL", current_level+1, "VARIANT", current_variant)
+    current_variant = data["variant"]
+    time_limit = data["time_limit"]
 
+    start_time = data["start_time"]
+    steps = data["steps"]
+    death_count = data["death_count"]
 
 # ===== RESET =====
 def reset():
@@ -255,7 +263,6 @@ def draw():
         )
 
     # ===== PLAYER =====
-    pr, pc = player.pos
     pygame.draw.rect(screen,RED,(
                                 player.pixel_x + 10 + offset_x,
                                 player.pixel_y + 10 + offset_y,
@@ -377,6 +384,7 @@ def handle_menu(event):
             game_state = NAME_INPUT
 
         elif btn_stat.is_clicked(event.pos):
+            stat_screen.reset()
             game_state = STAT
 
         elif btn_quit.is_clicked(event.pos):
@@ -415,82 +423,12 @@ def handle_death():
 
     death_count += 1
     player.reset()
+    level.reset_glass()
 
 # ===== HANDLE STEP COUNT =====
 def handle_step():
     global steps
     steps += 1    
-
-# ===== HANDLE WIN RECORD =====
-def record_win(current_level, current_variant, player_name, start_time):
-    global attempt, first_pass_dict
-
-    key = (current_level, current_variant)
-
-    first_pass = key not in first_pass_dict
-
-    time_used = (pygame.time.get_ticks() - start_time) / 1000
-
-    save_stat({
-        "player_name": player_name,
-        "level": current_level + 1,
-        "variant": current_variant + 1,
-        "attempt": attempt,
-        "steps": steps,
-        "time_used": round(time_used, 2),
-        "deaths": death_count,
-        "result": "win",
-        "first_pass": first_pass
-    })
-
-    first_pass_dict[key] = True
-    attempt += 1
-
-# ===== SHOW WIN RATE =====
-def draw_winrate_chart(screen, font_small):
-    win_rates = get_win_rate()
-
-    start_x = 150
-    base_y = 500
-    bar_width = 40
-    gap = 30
-
-    for i, level in enumerate(sorted(win_rates)):
-        rate = win_rates[level]
-
-        height = int(rate * 300)  # scale
-
-        x = start_x + i * (bar_width + gap)
-        y = base_y - height
-
-        pygame.draw.rect(screen, (100,200,255), (x, y, bar_width, height))
-
-        # label
-        text = font_small.render(str(level), True, (255,255,255))
-        screen.blit(text, (x, base_y + 10))
-
-        percent = font_small.render(f"{int(rate*100)}%", True, (255,255,255))
-        screen.blit(percent, (x, y - 30))    
-
-# ===== HANDLE WIN RECORD =====
-def record_lose(current_level, current_variant, player_name, start_time):
-    global attempt
-
-    time_used = (pygame.time.get_ticks() - start_time) / 1000
-
-    save_stat({
-        "player_name": player_name,
-        "level": current_level + 1,
-        "variant": current_variant + 1,
-        "attempt": attempt,
-        "steps": steps,
-        "time_used": round(time_used, 2),
-        "deaths": death_count,
-        "result": "lose",
-        "first_pass": False
-    })
-
-    attempt += 1
 
 # ===== MAIN LOOP =====
 while True:
@@ -508,20 +446,7 @@ while True:
             handle_select(event)    
 
         elif game_state == STAT:
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    game_state = MENU
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if btn_next.is_clicked(event.pos):
-                    page += 1
-                    print("NEXT", page)   # debug
-                elif btn_prev.is_clicked(event.pos):
-                    page -= 1
-                    print("PREV", page)
-
-            page = max(0, page)
+            stat_screen.draw()
 
         elif game_state == NAME_INPUT:
             handle_name_input(event)
@@ -534,17 +459,29 @@ while True:
         elif game_state == PLAYING:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
+                    old_pos = player.pos
                     player.move(DIR["UP"], level)
-                    handle_step()
+                    if player.pos != old_pos:
+                        handle_step()
+
                 elif event.key == pygame.K_DOWN:
+                    old_pos = player.pos
                     player.move(DIR["DOWN"], level)
-                    handle_step()
+                    if player.pos != old_pos:
+                        handle_step()
+
                 elif event.key == pygame.K_LEFT:
+                    old_pos = player.pos
                     player.move(DIR["LEFT"], level)
-                    handle_step()
+                    if player.pos != old_pos:
+                        handle_step()
+
                 elif event.key == pygame.K_RIGHT:
+                    old_pos = player.pos
                     player.move(DIR["RIGHT"], level)
-                    handle_step()
+                    if player.pos != old_pos:
+                        handle_step()
+
                 elif event.key == pygame.K_r:
                     reset()
                 elif event.key == pygame.K_n:   # N = next (ผ่านด่าน)
@@ -559,17 +496,20 @@ while True:
 
         if result == "dead":
             handle_death()
-            reset()
             continue
     
         if result == "goal":
-            record_win(current_level, current_variant, player_name, start_time)
+            save_data.record_win(current_level,current_variant,player_name,
+                                 start_time,steps,death_count)
+            
             result_message = f"YOU WIN! (Level {current_level+1})"
             game_state = RESULT
     
         elapsed = (pygame.time.get_ticks() - start_time) / 1000
         if elapsed > time_limit:
-            record_lose(current_level, current_variant, player_name, start_time)
+            save_data.record_lose(current_level,current_variant,player_name,
+                                  start_time,steps,death_count)
+            
             result_message = "TIME UP!"
             game_state = RESULT
 
@@ -581,17 +521,10 @@ while True:
     elif game_state == PLAYING:
         draw()
     elif game_state == STAT:
-        summary = get_summary()
-        total_pages = max(0, (len(summary) - 1)//8)
-        page = max(0, min(page, total_pages))
+        result = stat_screen.handle_event(event)
+        if result == "back":
+            game_state = MENU
 
-        draw_stat_screen(screen, font_big, font_small, page)
-
-        btn_prev.rect.center = (screen.get_width()//2 - 80, screen.get_height() - 80)
-        btn_next.rect.center = (screen.get_width()//2 + 80, screen.get_height() - 80)
-
-        btn_prev.draw(screen, font_small)
-        btn_next.draw(screen, font_small)
     elif game_state == NAME_INPUT:
         draw_name_input()
     elif game_state == RESULT:

@@ -5,6 +5,7 @@ class Level:
         self.goal = tuple(data["goal"])
 
         self.glass = set(map(tuple, data.get("glass", [])))
+        self.original_glass = set(self.glass)
         self.broken_glass = set()
         self.walls = set(map(tuple, data.get("walls", [])))
         self.ice = set(map(tuple, data.get("ice", [])))
@@ -30,6 +31,10 @@ class Level:
 
     def reset_state(self):
         self.barrier_active = {k: True for k in self.barriers}
+
+    def reset_glass(self):
+        self.glass = set(self.original_glass)
+        self.broken_glass = set()
 
     def is_blocked(self, pos):
         r, c = pos

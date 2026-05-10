@@ -1,29 +1,73 @@
 import json
 import random
+import pygame
 
-used_variants = {}
+from level import Level
+from player import Player
+from mechanics import Mechanics
 
-def load_level(level_name, variant=None):
-    with open(f"levels/{level_name}.json") as f:
-        data = json.load(f)
 
-    variants = data["variants"]
-    total = len(variants)
+class LevelManager:
+    def __init__(self):
+        # Store used variants for each level
+        self.used_variants = {}
 
-    # init if not create
-    if level_name not in used_variants:
-        used_variants[level_name] = []
+    def load_current_level(self, current_level):
+        level_name = f"level{current_level + 1}"
 
-    # make it random the variant that not already used
-    if variant is None:
-        available = [i for i in range(total) if i not in used_variants[level_name]]
+        # Load level JSON
+        with open(f"levels/{level_name}.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
 
+        variants = data["variants"]
+        total_variants = len(variants)
+
+        # Create used list if not exists
+        if level_name not in self.used_variants:
+            self.used_variants[level_name] = []
+
+        # Find unused variants
+        available = [
+            i for i in range(total_variants)
+            if i not in self.used_variants[level_name]
+        ]
+
+        # Reset if all variants were used
         if not available:
-            # reset if used all variant already
-            used_variants[level_name] = []
-            available = list(range(total))
+            self.used_variants[level_name] = []
+            available = list(range(total_variants))
 
-        variant = random.choice(available)
-        used_variants[level_name].append(variant)
+        # Select one variant randomly
+        variant_index = random.choice(available)
+        self.used_variants[level_name].append(variant_index)
 
-    return variants[variant], variant, data.get("time_limit", 15)
+        # Create objects
+        level = Level(variants[variant_index])
+        player = Player(level.start)
+        mechanics = Mechanics(level)
+
+        rows, cols = level.grid_size
+        time_limit = data.get("time_limit", 15)
+
+        # Initialize runtime values
+        start_time = pygame.time.get_ticks()
+        steps = 0
+        death_count = 0
+
+        print(
+            "LEVEL", current_level + 1,
+            "VARIANT", variant_index + 1
+        )
+
+        return {
+            "level": level,
+            "player": player,
+            "mechanics": mechanics,
+            "rows": rows,
+            "cols": cols,
+            "variant": variant_index,
+            "time_limit": time_limit,
+            "start_time": start_time,
+            "steps": steps,
+            "death_count": death_count
+        }

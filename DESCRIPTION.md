@@ -93,14 +93,15 @@ Player data is stored in a CSV file (`stats.csv`) including:
 ## 6. Changed Proposed Features (Optional)
 
 Some mechanics and UI features were adjusted during development:
-- Replaced scrolling table with pagination system  
+- change laser to lava 
 - Improved stat visualization layout  
-- Adjusted level design for better playability  
+- Adjusted level design for better playability
+- changed the amount level to 10 level
 
 ---
 
 ## 7. External Sources
 
 - Pygame library (game development framework)  
-- Icons and assets (self-created or free resources)  
+- Icons and In game picture (Chat GPT-generated or self created)  
 - Python standard libraries (csv, collections)
